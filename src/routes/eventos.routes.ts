@@ -8,6 +8,23 @@ import { EstadoEvento } from '@prisma/client';
 
 const router = Router();
 
+router.get(
+  '/admin/all',
+  authenticate,
+  authorize('ADMIN'),
+  async (_req: Request, res: Response, next: NextFunction) => {
+    try {
+      const eventos = await prisma.evento.findMany({
+        include: { tiposEntrada: true },
+        orderBy: { fechaInicio: 'asc' },
+      });
+      res.json({ eventos });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
+
 // ─────────────────────────────────────────────
 // GET /api/eventos
 // Listar eventos (público: por defecto solo PUBLICADO; admin puede filtrar)
