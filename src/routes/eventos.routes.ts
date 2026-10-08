@@ -5,8 +5,50 @@ import { validate } from '../middleware/validate.js';
 import { createEventoSchema, updateEventoSchema } from '../schemas/evento.schema.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { EstadoEvento } from '@prisma/client';
+import multer from 'multer';
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
 
 const router = Router();
+const uploadsDirectory = path.resolve(process.cwd(), 'uploads', 'events');
+fs.mkdirSync(uploadsDirectory, { recursive: true });
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: uploadsDirectory,
+    filename: (_req, file, callback) => {
+      const extension = path.extname(file.originalname).toLowerCase();
+      callback(null, `${crypto.randomUUID()}${extension}`);
+    },
+  }),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, callback) => {
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype)) {
+      callback(new AppError('La foto debe ser JPG, PNG o WebP', 400));
+      return;
+    }
+    callback(null, true);
+  },
+});
+
+router.post(
+  '/imagen',
+  authenticate,
+  authorize('ADMIN'),
+  upload.single('imagen'),
+  (req: Request, res: Response, next: NextFunction) => {
+    try {
+      if (!req.file) {
+        throw new AppError('Debe seleccionar una foto para el evento', 400);
+      }
+      res.status(201).json({
+        imagenUrl: `${req.protocol}://${req.get('host')}/uploads/events/${req.file.filename}`,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+);
 
 router.get(
   '/admin/all',
