@@ -13,7 +13,7 @@ export function generateTokenQR(): string {
 
 export function verifyTokenQR(token: string): { valid: boolean; uuid: string } {
   const [uuid, signature] = token.split('.');
-  if (!uuid || !signature) {
+  if (!uuid || !signature || !/^[a-f0-9]{64}$/i.test(signature)) {
     return { valid: false, uuid: '' };
   }
 
@@ -22,10 +22,12 @@ export function verifyTokenQR(token: string): { valid: boolean; uuid: string } {
     .update(uuid)
     .digest('hex');
 
-  const valid = crypto.timingSafeEqual(
-    Buffer.from(signature, 'hex'),
-    Buffer.from(expectedSignature, 'hex')
-  );
+  const providedSignature = Buffer.from(signature, 'hex');
+  const valid = providedSignature.length === expectedSignature.length &&
+    crypto.timingSafeEqual(
+      providedSignature,
+      Buffer.from(expectedSignature, 'hex')
+    );
 
   return { valid, uuid };
 }
