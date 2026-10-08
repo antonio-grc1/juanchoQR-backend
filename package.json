@@ -12,7 +12,8 @@
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
-    "seed:admin": "tsx src/scripts/seed-admin.ts"
+    "seed:admin": "tsx src/scripts/seed-admin.ts",
+    "seed:evento": "tsx src/scripts/seed-evento.ts"
   },
   "dependencies": {
     "@prisma/client": "^5.0.0",
