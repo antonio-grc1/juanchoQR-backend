@@ -34,3 +34,4 @@ export const updateEventoSchema = z.object({
   estado: z.enum(['BORRADOR', 'PUBLICADO', 'FINALIZADO', 'CANCELADO']).optional(),
   tiposEntrada: z.array(tipoEntradaSchema).optional(),
 });
+
