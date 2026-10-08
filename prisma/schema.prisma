@@ -55,6 +55,7 @@ model Evento {
   titulo      String
   descripcion String?      @db.Text
   imagenUrl   String?      @map("imagen_url")
+  imagenPublicId String?   @map("imagen_public_id")
   fechaInicio DateTime     @map("fecha_inicio")
   fechaFin    DateTime?    @map("fecha_fin")
   ubicacion   String?

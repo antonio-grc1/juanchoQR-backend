@@ -12,6 +12,7 @@ export const createEventoSchema = z.object({
   titulo: z.string().min(1, 'El título del evento es requerido'),
   descripcion: z.string().optional().nullable(),
   imagenUrl: z.string().url('La foto del evento es requerida').min(1, 'La foto del evento es requerida'),
+  imagenPublicId: z.string().min(1, 'La referencia de la foto es requerida'),
   fechaInicio: z.coerce.date({
     required_error: 'La fecha de inicio es requerida',
     invalid_type_error: 'Fecha de inicio inválida',
@@ -28,6 +29,7 @@ export const updateEventoSchema = z.object({
   titulo: z.string().min(1, 'El título del evento no puede estar vacío').optional(),
   descripcion: z.string().optional().nullable(),
   imagenUrl: z.string().url('La URL de la foto del evento no es válida').optional().nullable(),
+  imagenPublicId: z.string().min(1).optional().nullable(),
   fechaInicio: z.coerce.date().optional(),
   fechaFin: z.coerce.date().optional().nullable(),
   ubicacion: z.string().optional().nullable(),

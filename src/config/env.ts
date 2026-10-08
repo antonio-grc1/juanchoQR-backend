@@ -14,6 +14,9 @@ const envSchema = z.object({
   FRONTEND_URL: z.string().url().default('http://localhost:5173'),
   QR_HMAC_SECRET: z.string().min(1),
   QR_HMAC_SECRET_PREVIOUS: z.string().min(1).optional(),
+  CLOUDINARY_CLOUD_NAME: z.string().min(1).optional(),
+  CLOUDINARY_API_KEY: z.string().min(1).optional(),
+  CLOUDINARY_API_SECRET: z.string().min(1).optional(),
 });
 
 const _env = envSchema.safeParse(process.env);

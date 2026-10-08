@@ -6,21 +6,11 @@ import { createEventoSchema, updateEventoSchema } from '../schemas/evento.schema
 import { AppError } from '../middleware/errorHandler.js';
 import { EstadoEvento } from '@prisma/client';
 import multer from 'multer';
-import fs from 'node:fs';
-import path from 'node:path';
-import crypto from 'node:crypto';
+import { deleteEventImage, uploadEventImage } from '../lib/cloudinary.js';
 
 const router = Router();
-const uploadsDirectory = path.resolve(process.cwd(), 'uploads', 'events');
-fs.mkdirSync(uploadsDirectory, { recursive: true });
 const upload = multer({
-  storage: multer.diskStorage({
-    destination: uploadsDirectory,
-    filename: (_req, file, callback) => {
-      const extension = path.extname(file.originalname).toLowerCase();
-      callback(null, `${crypto.randomUUID()}${extension}`);
-    },
-  }),
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_req, file, callback) => {
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype)) {
@@ -36,13 +26,15 @@ router.post(
   authenticate,
   authorize('ADMIN'),
   upload.single('imagen'),
-  (req: Request, res: Response, next: NextFunction) => {
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
       if (!req.file) {
         throw new AppError('Debe seleccionar una foto para el evento', 400);
       }
+      const image = await uploadEventImage(req.file.buffer);
       res.status(201).json({
-        imagenUrl: `${req.protocol}://${req.get('host')}/uploads/events/${req.file.filename}`,
+        imagenUrl: image.secureUrl,
+        imagenPublicId: image.publicId,
       });
     } catch (error) {
       next(error);
@@ -264,6 +256,9 @@ router.put(
           },
         });
       });
+      if (eventoData.imagenPublicId && eventoData.imagenPublicId !== eventoExistente.imagenPublicId) {
+        await deleteEventImage(eventoExistente.imagenPublicId);
+      }
 
       res.json({
         message: 'Evento actualizado exitosamente',
