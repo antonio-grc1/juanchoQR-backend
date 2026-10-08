@@ -1,0 +1,115 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Rol {
+  COMPRADOR
+  ADMIN
+  VALIDADOR
+}
+
+enum EstadoEvento {
+  BORRADOR
+  PUBLICADO
+  FINALIZADO
+  CANCELADO
+}
+
+enum EstadoOrden {
+  PENDIENTE
+  PAGADA
+  RECHAZADA
+  REEMBOLSADA
+}
+
+enum EstadoTicket {
+  ACTIVO
+  UTILIZADO
+  CANCELADO
+}
+
+model Usuario {
+  id            String   @id @default(uuid())
+  email         String   @unique
+  nombre        String
+  passwordHash  String?  @map("password_hash")
+  googleId      String?  @unique @map("google_id")
+  rol           Rol      @default(COMPRADOR)
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  ordenes           Orden[]
+  ticketsValidados  Ticket[] @relation("ValidadorTickets")
+
+  @@map("usuarios")
+}
+
+model Evento {
+  id          String       @id @default(uuid())
+  titulo      String
+  descripcion String?      @db.Text
+  imagenUrl   String?      @map("imagen_url")
+  fechaInicio DateTime     @map("fecha_inicio")
+  fechaFin    DateTime?    @map("fecha_fin")
+  ubicacion   String?
+  estado      EstadoEvento @default(BORRADOR)
+  createdAt   DateTime     @default(now()) @map("created_at")
+  updatedAt   DateTime     @updatedAt @map("updated_at")
+
+  tiposEntrada TipoEntrada[]
+
+  @@map("eventos")
+}
+
+model TipoEntrada {
+  id               String  @id @default(uuid())
+  eventoId         String  @map("evento_id")
+  nombre           String
+  precio           Decimal @db.Decimal(10, 2)
+  stockTotal       Int     @map("stock_total")
+  stockDisponible  Int     @map("stock_disponible")
+  maxPorCompra     Int     @default(10) @map("max_por_compra")
+
+  evento  Evento   @relation(fields: [eventoId], references: [id], onDelete: Cascade)
+  tickets Ticket[]
+
+  @@map("tipos_entrada")
+}
+
+model Orden {
+  id              String      @id @default(uuid())
+  usuarioId       String      @map("usuario_id")
+  total           Decimal     @db.Decimal(10, 2)
+  estado          EstadoOrden @default(PENDIENTE)
+  mpPreferenceId  String?     @map("mp_preference_id")
+  mpPaymentId     String?     @map("mp_payment_id")
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  usuario Usuario  @relation(fields: [usuarioId], references: [id])
+  tickets Ticket[]
+
+  @@map("ordenes")
+}
+
+model Ticket {
+  id             String        @id @default(uuid())
+  ordenId        String        @map("orden_id")
+  tipoEntradaId  String        @map("tipo_entrada_id")
+  tokenQr        String        @unique @map("token_qr")
+  estado         EstadoTicket  @default(ACTIVO)
+  fechaUso       DateTime?     @map("fecha_uso")
+  validadorId    String?       @map("validador_id")
+  createdAt      DateTime      @default(now()) @map("created_at")
+
+  orden       Orden       @relation(fields: [ordenId], references: [id])
+  tipoEntrada TipoEntrada @relation(fields: [tipoEntradaId], references: [id])
+  validador   Usuario?    @relation("ValidadorTickets", fields: [validadorId], references: [id])
+
+  @@map("tickets")
+}
