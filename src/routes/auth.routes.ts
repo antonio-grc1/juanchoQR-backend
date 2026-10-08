@@ -23,17 +23,23 @@ router.post(
       const { idToken } = req.body;
 
       // Verificar el token de Google
-      const ticket = await googleClient.verifyIdToken({
-        idToken,
-        audience: env.GOOGLE_CLIENT_ID,
-      });
+      let ticket;
+      try {
+        ticket = await googleClient.verifyIdToken({
+          idToken,
+          audience: env.GOOGLE_CLIENT_ID,
+        });
+      } catch (verifyError: any) {
+        console.error('❌ Error al verificar idToken con Google:', verifyError.message || verifyError);
+        throw new AppError(`Error al verificar token con Google: ${verifyError.message || 'Token inválido'}`, 401);
+      }
 
       const payload = ticket.getPayload();
       if (!payload || !payload.email) {
-        throw new AppError('Token de Google inválido', 401);
+        throw new AppError('Token de Google no contiene información de email', 401);
       }
 
-      const { sub: googleId, email, name, picture } = payload;
+      const { sub: googleId, email, name } = payload;
 
       // Buscar usuario existente o crear uno nuevo
       let usuario = await prisma.usuario.findUnique({
@@ -41,13 +47,13 @@ router.post(
       });
 
       if (!usuario) {
-        // También verificar si existe un usuario con ese email (registrado como admin)
+        // También verificar si existe un usuario con ese email (registrado previamente como admin o con password)
         const existingByEmail = await prisma.usuario.findUnique({
           where: { email },
         });
 
         if (existingByEmail) {
-          // Si ya existe un admin con ese email, vincular su Google ID
+          // Si ya existe con ese email, vincular su Google ID
           usuario = await prisma.usuario.update({
             where: { email },
             data: { googleId },
@@ -80,7 +86,8 @@ router.post(
           rol: usuario.rol,
         },
       });
-    } catch (error) {
+    } catch (error: any) {
+      console.error('❌ Error en POST /api/auth/google:', error);
       next(error);
     }
   }
