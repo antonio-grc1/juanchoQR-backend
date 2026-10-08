@@ -3,6 +3,7 @@ import { generateTokenQR } from '../lib/qr.js';
 import { createCheckoutPreference } from '../lib/mercadopago.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { EstadoOrden, EstadoTicket } from '@prisma/client';
+import { sendTicketsEmail } from '../lib/email.js';
 
 export interface CreateOrderParams {
   usuarioId: string;
@@ -126,10 +127,37 @@ export async function confirmOrderPayment(ordenId: string, paymentId?: string) {
       mpPaymentId: paymentId || `pay_sim_${Date.now()}`,
     },
     include: {
-      tickets: true,
+      tickets: {
+        include: {
+          tipoEntrada: {
+            include: {
+              evento: true,
+            },
+          },
+        },
+      },
       usuario: true,
     },
   });
+
+  // Enviar email con los códigos QR en segundo plano
+  if (ordenActualizada.tickets.length > 0) {
+    const primerTicket = ordenActualizada.tickets[0];
+    const evento = primerTicket.tipoEntrada.evento;
+
+    sendTicketsEmail({
+      to: ordenActualizada.usuario.email,
+      nombreComprador: ordenActualizada.usuario.nombre,
+      eventoTitulo: evento.titulo,
+      fechaEvento: new Date(evento.fechaInicio).toLocaleDateString('es-AR'),
+      ubicacion: evento.ubicacion || undefined,
+      tickets: ordenActualizada.tickets.map((t) => ({
+        id: t.id,
+        tipoNombre: t.tipoEntrada.nombre,
+        tokenQr: t.tokenQr,
+      })),
+    }).catch((err) => console.error('Error enviando email con tickets:', err));
+  }
 
   return ordenActualizada;
 }
@@ -174,3 +202,4 @@ export async function rejectOrderPayment(ordenId: string) {
     });
   });
 }
+
