@@ -29,7 +29,7 @@ export async function createOrder({
       throw new AppError('El tipo de entrada seleccionado no existe', 404);
     }
 
-    if (tipo.evento.estado !== 'PUBLICADO') {
+    if (tipo.evento.estado !== 'DISPONIBLE') {
       throw new AppError('El evento no está disponible para la venta', 400);
     }
 
@@ -202,4 +202,3 @@ export async function rejectOrderPayment(ordenId: string) {
     });
   });
 }
-

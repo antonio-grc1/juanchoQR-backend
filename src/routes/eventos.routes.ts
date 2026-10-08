@@ -61,7 +61,7 @@ router.get(
 
 // ─────────────────────────────────────────────
 // GET /api/eventos
-// Listar eventos (público: por defecto solo PUBLICADO; admin puede filtrar)
+// Listar eventos (público: por defecto solo DISPONIBLE; admin puede filtrar)
 // ─────────────────────────────────────────────
 router.get('/', async (req: Request, res: Response, next: NextFunction) => {
   try {
@@ -74,8 +74,8 @@ router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     } else if (estadoQuery === 'ALL') {
       // No filtrar por estado
     } else {
-      // Público: por defecto eventos publicados
-      whereClause.estado = EstadoEvento.PUBLICADO;
+      // Público: por defecto eventos disponibles
+      whereClause.estado = EstadoEvento.DISPONIBLE;
     }
 
     const eventos = await prisma.evento.findMany({
@@ -306,15 +306,15 @@ router.delete(
       );
 
       if (totalTickets > 0) {
-        // Soft delete: cambiar a CANCELADO para preservar auditoría de tickets existentes
+        // Finalizar el evento para preservar auditoría de tickets existentes
         const eventoCancelado = await prisma.evento.update({
           where: { id },
-          data: { estado: EstadoEvento.CANCELADO },
+          data: { estado: EstadoEvento.FINALIZADO },
         });
 
         res.json({
           message:
-            'El evento no se eliminó físicamente porque ya posee tickets emitidos. Su estado fue cambiado a CANCELADO.',
+            'El evento no se eliminó físicamente porque ya posee tickets emitidos. Su estado fue cambiado a FINALIZADO.',
           evento: eventoCancelado,
         });
         return;

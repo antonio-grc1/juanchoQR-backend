@@ -19,7 +19,7 @@ export const createEventoSchema = z.object({
   }),
   fechaFin: z.coerce.date().optional().nullable(),
   ubicacion: z.string().optional().nullable(),
-  estado: z.enum(['BORRADOR', 'PUBLICADO', 'FINALIZADO', 'CANCELADO']).default('BORRADOR'),
+  estado: z.enum(['BORRADOR', 'DISPONIBLE', 'FINALIZADO']).default('BORRADOR'),
   tiposEntrada: z
     .array(tipoEntradaSchema)
     .min(1, 'Debe definir al menos un tipo de entrada para el evento'),
@@ -33,6 +33,6 @@ export const updateEventoSchema = z.object({
   fechaInicio: z.coerce.date().optional(),
   fechaFin: z.coerce.date().optional().nullable(),
   ubicacion: z.string().optional().nullable(),
-  estado: z.enum(['BORRADOR', 'PUBLICADO', 'FINALIZADO', 'CANCELADO']).optional(),
+  estado: z.enum(['BORRADOR', 'DISPONIBLE', 'FINALIZADO']).optional(),
   tiposEntrada: z.array(tipoEntradaSchema).optional(),
 });

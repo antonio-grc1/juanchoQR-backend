@@ -22,7 +22,7 @@ async function main() {
       fechaInicio: new Date('2026-11-15T12:00:00Z'),
       fechaFin: new Date('2026-11-15T18:00:00Z'),
       ubicacion: 'Polideportivo Colegio Peña',
-      estado: EstadoEvento.PUBLICADO,
+      estado: EstadoEvento.DISPONIBLE,
       tiposEntrada: {
         create: [
           {
@@ -68,4 +68,3 @@ main()
   .finally(async () => {
     await prisma.$disconnect();
   });
-

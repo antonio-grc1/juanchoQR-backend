@@ -16,9 +16,8 @@ enum Rol {
 
 enum EstadoEvento {
   BORRADOR
-  PUBLICADO
+  DISPONIBLE
   FINALIZADO
-  CANCELADO
 }
 
 enum EstadoOrden {
