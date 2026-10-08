@@ -12,3 +12,4 @@ export const adminLoginSchema = z.object({
 export const refreshTokenSchema = z.object({
   refreshToken: z.string().min(1, 'El refresh token es requerido'),
 });
+
