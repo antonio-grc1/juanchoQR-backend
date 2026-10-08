@@ -13,6 +13,7 @@ const envSchema = z.object({
   RESEND_API_KEY: z.string().optional(),
   FRONTEND_URL: z.string().url().default('http://localhost:5173'),
   QR_HMAC_SECRET: z.string().min(1),
+  QR_HMAC_SECRET_PREVIOUS: z.string().min(1).optional(),
 });
 
 const _env = envSchema.safeParse(process.env);
