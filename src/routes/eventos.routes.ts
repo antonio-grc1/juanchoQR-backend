@@ -173,12 +173,28 @@ router.put(
           for (const tipo of tiposEntrada) {
             if (tipo.id) {
               // Actualizar tipo existente
+              const tipoExistente = await tx.tipoEntrada.findUnique({
+                where: { id: tipo.id },
+              });
+              if (!tipoExistente || tipoExistente.eventoId !== id) {
+                throw new AppError('Tipo de entrada no encontrado para este evento', 404);
+              }
+
+              const entradasVendidas = tipoExistente.stockTotal - tipoExistente.stockDisponible;
+              if (tipo.stockTotal < entradasVendidas) {
+                throw new AppError(
+                  `El stock no puede ser menor que las ${entradasVendidas} entradas vendidas`,
+                  400
+                );
+              }
+
               await tx.tipoEntrada.update({
                 where: { id: tipo.id },
                 data: {
                   nombre: tipo.nombre,
                   precio: tipo.precio,
                   stockTotal: tipo.stockTotal,
+                  stockDisponible: tipo.stockTotal - entradasVendidas,
                   maxPorCompra: tipo.maxPorCompra,
                 },
               });
