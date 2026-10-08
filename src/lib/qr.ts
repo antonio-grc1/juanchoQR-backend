@@ -18,10 +18,11 @@ function verifySignature(uuid: string, signature: string, secret: string): boole
     .digest('hex');
 
   const providedSignature = Buffer.from(signature, 'hex');
-  return providedSignature.length === expectedSignature.length &&
+  const expectedSignatureBuffer = Buffer.from(expectedSignature, 'hex');
+  return providedSignature.length === expectedSignatureBuffer.length &&
     crypto.timingSafeEqual(
       providedSignature,
-      Buffer.from(expectedSignature, 'hex')
+      expectedSignatureBuffer
     );
 }
 
